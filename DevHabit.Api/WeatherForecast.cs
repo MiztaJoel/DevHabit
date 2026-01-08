@@ -10,4 +10,3 @@ namespace DevHabit.Api
 
         public string? Summary { get; set; }
     }
-}
