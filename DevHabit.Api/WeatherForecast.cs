@@ -1,5 +1,4 @@
-namespace DevHabit.Api
-{
+namespace DevHabit.Api;
     public class WeatherForecast
     {
         public DateOnly Date { get; set; }
@@ -10,3 +9,4 @@ namespace DevHabit.Api
 
         public string? Summary { get; set; }
     }
+
