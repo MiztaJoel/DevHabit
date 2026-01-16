@@ -17,8 +17,15 @@ namespace DevHabit.Api.Controllers;
 public sealed class HabitsController(ApplicationDbContext dbContext) : ControllerBase
 {
     [HttpGet]
-  public async Task<ActionResult<HabitsCollectionDto>> GetHabits([FromQuery] HabitQueryParameters query, SortMappingProvider sortMappingProvider)
+    public async Task<ActionResult<HabitsCollectionDto>> GetHabits([FromQuery] HabitQueryParameters query, SortMappingProvider sortMappingProvider)
     {
+        if (!sortMappingProvider.ValidateMapping<HabitDto, Habit>(query.Sort)){
+
+            return Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                detail: $"The provided sort parameter isn't valid: '{query.Sort}'"
+                );
+        }
         query.Search ??= query.Search?.Trim().ToLower();
         // IQueryable<Habit> query =  dbContext.Habits;
 
