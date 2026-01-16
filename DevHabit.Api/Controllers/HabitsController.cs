@@ -32,26 +32,20 @@ public sealed class HabitsController(ApplicationDbContext dbContext) : Controlle
 
         SortMapping[] sortMapping = sortMappingProvider.GetMappings<HabitDto, Habit>();
 
-        IQueryable<Habit> habitsQuery = dbContext.Habits
+        IQueryable<HabitDto> habitsQuery = dbContext.Habits
             .Where(h => query.Search == null ||
                                 h.Name.Contains(query.Search) ||
                                 h.Description != null && h.Description.Contains(query.Search))
             .Where(h => query.Type == null || h.Type == query.Type)         
-            .Where(h => query.Status == null || h.Status == query.Status);
+            .Where(h => query.Status == null || h.Status == query.Status)
+             .ApplySort(query.Sort, sortMapping)
+            .Select(HabitQueries.ProjectToDto());
 
         //int totalAccount = await habitsQuery.CountAsync();
 
-        List<HabitDto> habits = await habitsQuery
-            .ApplySort(query.Sort, sortMapping)
-            .Skip((query.PageSize-1) * query.PageSize)
-            .Take(query.PageSize)
-            .Select(HabitQueries.ProjectToDto())
-            .ToListAsync();
 
-        var paginationResult = new PaginationResult<HabitDto>
-        {
-            Items = habits
-        };
+        PaginationResult<HabitDto> paginationResult = await PaginationResult<HabitDto>.CreateAsync(habitsQuery, query.Page, query.PageSize);
+
         return Ok(paginationResult);
 
     }
