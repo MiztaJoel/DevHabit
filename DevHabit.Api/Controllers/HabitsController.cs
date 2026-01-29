@@ -18,7 +18,7 @@ namespace DevHabit.Api.Controllers;
 
 [ApiController]
 [Route("habits")]
-public sealed class HabitsController(ApplicationDbContext dbContext, LinkService linkService) : ControllerBase
+public sealed class HabitsController(ApplicationDbContext dbContext) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult> GetHabits(
@@ -67,7 +67,7 @@ public sealed class HabitsController(ApplicationDbContext dbContext, LinkService
         
         var paginationResult = new PaginationResult<ExpandoObject>
         {
-            Items = dataShapingService.ShapeCollectionData(habits,query.Fields,h=>CreateLinksForHabit(h.Id,query.Fields)),
+            Items = dataShapingService.ShapeCollectionData(habits,query.Fields),
             Page= query.Page,
             PageSize= query.PageSize,
             TotalCount= totalCount,
@@ -96,13 +96,9 @@ public sealed class HabitsController(ApplicationDbContext dbContext, LinkService
         {
             return NotFound();
         }
-        ExpandoObject shapedHabitDto = dataShapingService.ShapeData(habit, fields);
-
-        List<LinkDto> links = CreateLinksForHabit(id, fields);
-        shapedHabitDto.TryAdd("links", links);
+        ExpandoObject shapedHabitDto = dataShapingService.ShapeData(habit, fields );
         return Ok(shapedHabitDto);
     }
-
 
     [HttpPost]
     public async Task<ActionResult<HabitDto>> CreateHabit(CreateHabitDto createHabitDto,IValidator<CreateHabitDto> validator)
@@ -121,7 +117,6 @@ public sealed class HabitsController(ApplicationDbContext dbContext, LinkService
         await dbContext.SaveChangesAsync();
 
         HabitDto habitDto = habit.ToDto();
-        habitDto.Links = CreateLinksForHabit(habit.Id, null);
        
         return CreatedAtAction(nameof(GetHabit),new {id=habitDto.Id},habitDto);
     }
@@ -185,15 +180,4 @@ public sealed class HabitsController(ApplicationDbContext dbContext, LinkService
         return NoContent();
 
     }
-    private List<LinkDto> CreateLinksForHabit(string id, string? fields)
-    {
-       List<LinkDto> links = [
-            linkService.Create(nameof(GetHabit),"self",HttpMethods.Get,new {id,fields}),
-            linkService.Create(nameof(UpdateHabit),"update",HttpMethods.Put,new {id}),
-            linkService.Create(nameof(PatchHabit),"partial-update",HttpMethods.Patch,new {id}),
-            linkService.Create(nameof(DeleteHabit),"delete",HttpMethods.Delete,new {id}),
-            ];
-        return links;
-    }
-
 }
