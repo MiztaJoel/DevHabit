@@ -1,4 +1,5 @@
-﻿using DevHabit.Api.Entities;
+﻿using DevHabit.Api.DTOs.Common;
+using DevHabit.Api.Entities;
 
 namespace DevHabit.Api.DTOs.Habits;
 
@@ -17,6 +18,8 @@ public sealed record HabitDto
     public DateTime CreatedAtUtc { get; init; }
     public DateTime? UpdatedAtUtc { get; init; }
     public  DateTime? LastCompletedAtUtc { get; init; }
+
+    public List<LinkDto> Links { get; set; }
 
     //public List<HabitTag> HabitTags { get; set; }
     //public List<Tag> Tags { get; set; }
