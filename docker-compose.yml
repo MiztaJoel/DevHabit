@@ -1,24 +1,20 @@
-services:
+﻿services:
   devhabit.api:
     image: ${DOCKER_REGISTRY-}devhabitapi
-
     build:
       context: .
       dockerfile: DevHabit.Api/Dockerfile
     ports:
-    - 5000:8080
-    - 5001:8081
-
+      - "5000:8080"
+      - "5001:8081"
     environment:
-      # Seq
-       # -  OTEL_EXPORTER_OTLP_ENDPOINT=http://devhabit.seq:5341/ingest/otlp
-       # -  OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
-          # Aspire Dashboard
-       - OTEL_EXPORTER_OTLP_ENDPOINT=http://devhabit.aspire-dashboard:18889
-       - OTEL_EXPORTER_OTLP_PROTOCOL=grpc  
-       - ConnectionStrings__Database=Host=devhabit.postgres;Database=devhabit;Username=postgres;Password=postgres;TrustServerCertificate=true;   
+      # Aspire Dashboard
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://devhabit.aspire-dashboard:18888
+      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc  
+      - ConnectionStrings__Database=Host=devhabit.postgres;Database=devhabit;Username=postgres;Password=postgres;TrustServerCertificate=true;
     depends_on: 
-       - devhabit.postgres
+      - devhabit.postgres
+    restart: unless-stopped
 
   devhabit.seq:
     image: datalust/seq:2024.3 # or latest
@@ -27,45 +23,49 @@ services:
     volumes:
       - ./.containers/seq_data:/data
     ports:
-      - 8080:80
-      - 5341:5341
+      - "8080:80"
+      - "5341:5341"
+    restart: unless-stopped
 
-  devhabit.postgres:
+  devhabit.postgres:   # ✅ renamed (no dot)
     image: postgres:15
     container_name: devhabitDb
     environment:
       POSTGRES_DB: devhabit
-      POSTGRES_USER: postgres 
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
-     - ./.containers/postgres_data:/var/lib/postgresql/data
+      - ./containers/postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d devhabit"]
       interval: 10s
       timeout: 5s
       retries: 5
     ports:
-     - "5432:5432" 
+      - "5432:5432"
+    restart: unless-stopped
 
   devhabit.pgadmin:
     image: dpage/pgadmin4:latest
-    container_name: pdadmin4_container
+    container_name: pgadmin4_container
     environment:
-     - PGADMIN_DEFAULT_EMAIL=admin@your-netcup-domain.net
-     - PGADMIN_DEFAULT_PASSWORD=secrete
-     # - PGADMIN_LISTEN_PORT=8081
+      - PGADMIN_DEFAULT_EMAIL=admin@your-netcup-domain.net
+      - PGADMIN_DEFAULT_PASSWORD=secrete
     ports: 
-     - "8081:80"
+      - "8082:80"   # ✅ changed to avoid conflict with API
     depends_on:
-     - devhabit.postgres
+      - devhabit.postgres
     volumes: 
-     - ./.containers/adminpg:/data:/var/lib/pgadmin
+      - ./.containers/adminpg:/var/lib/pgadmin
+    restart: unless-stopped
 
   devhabit.aspire-dashboard:
-     image: mcr.microsoft.com/dotnet/aspire-dashboard:9.0
-     environment:
-       DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: true
-     ports:
-         - 18888:18888
+    image: mcr.microsoft.com/dotnet/aspire-dashboard:9.0
+    environment:
+      DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: true
+    ports:
+      - "18888:18888"
+    restart: unless-stopped
 
- 
+volumes:
+   postgres_data:

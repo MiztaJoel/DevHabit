@@ -3,7 +3,7 @@ using DevHabit.Api.Entities;
 
 namespace DevHabit.Api.DTOs.Habits;
 
-public sealed record HabitDto
+public sealed record HabitDto:ILinkResponse
 {
     public required string Id { get; init; }
     public required string Name { get; init; } 
